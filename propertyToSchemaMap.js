@@ -7,7 +7,7 @@ const propertyToSchemaMap = {
     establishmentYear: { section: 'companyDetails', prompt: 'When was the company established?' },
     companyOverview: { section: 'companyDetails', prompt: 'Provide an overview of the company.' },
     problemDescription: { section: 'problemDescription', prompt: 'Describe the problem the company aims to solve.' },
-    solutionsDescription: { section: 'solutionDescription', prompt: 'Describe the solutions provided by the company.' },
+    solutionsDescription: { section: 'solutionDescription', prompt: 'Convert the proposed solution into as few unique points as necessary, while ensuring they are mutually exclusive. Aim for minimum number of points while not exceeding 4 points.Only focus on the points which talk about the solutions and remove the points which talk about problems or opportunity. Merge the points associated with the same solution type in a single point. Keep the length of each point between 150 and 200 characters.' },
     sector: { section: 'market', prompt: 'What sector does the company operate in?' },
     otherSector: { section: 'market', prompt: 'Specify any other sectors the company operates in.' },
     marketDescription: { section: 'market', prompt: 'Describe the market the company targets.' },

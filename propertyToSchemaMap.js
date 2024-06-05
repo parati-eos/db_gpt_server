@@ -10,7 +10,7 @@ const propertyToSchemaMap = {
     solutionsDescription: { section: 'solutionDescription', prompt: 'Convert the proposed solution into as few unique points as necessary, while ensuring they are mutually exclusive. Aim for minimum number of points while not exceeding 4 points.Only focus on the points which talk about the solutions and remove the points which talk about problems or opportunity. Merge the points associated with the same solution type in a single point. Keep the length of each point between 150 and 200 characters.' },
     sector: { section: 'market', prompt: 'What sector does the company operate in?' },
     otherSector: { section: 'market', prompt: 'Specify any other sectors the company operates in.' },
-    marketDescription: { section: 'market', prompt: 'Describe the market the company targets.' },
+    marketDescription: { section: 'market', prompt: 'Describe the market the company targets.'},
     TAM: { section: 'market', prompt: 'What is the Total Addressable Market (TAM)?' },
     TAMGrowthRate: { section: 'market', prompt: 'What is the growth rate of the TAM?' },
     SAM: { section: 'market', prompt: 'What is the Serviceable Addressable Market (SAM)?' },

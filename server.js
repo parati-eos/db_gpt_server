@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const aboutController = require('./controllers/aboutController');
 const problemController = require('./controllers/problemController');
+const solutionController = require('./controllers/solutionController');
+const productScreenShotController = require('./controllers/productScreenShotController')
+const productController = require('./controllers/productController');
 const Response = require('./models/ResponseModel');
 
 // MongoDB connection string
@@ -66,7 +69,11 @@ app.post('/fetch-and-process', async (req, res) => {
 
     const gptResponse = new Response({
       about: await aboutController(submission,prompts.aboutPrompts),
-      problemDescription: await problemController(submission,prompts.problemPrompts)
+      problemDescription: await problemController(submission,prompts.problemPrompts),
+      solutionDescription: await solutionController(submission,prompts.solutionPrompts),
+      product: await productController(submission,prompts.productPrompts),
+      productScreen: await productScreenShotController(submission,prompts.productScreenShotPrompts),
+
     });
 
     await gptResponse.save();

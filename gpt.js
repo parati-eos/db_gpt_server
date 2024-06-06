@@ -2,7 +2,7 @@ const axios = require("axios");
 require('dotenv').config();
 
 
-const apiKey = process.env.API_KEY;// Replace with your actual API key
+const apiKey = process.env.API_KEY;
 
 async function GPT(prompt1, data) {
   const primaryPrompt = [

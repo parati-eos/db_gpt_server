@@ -9,7 +9,7 @@ async function problemController(submission,problemPrompts){
 
     const problemTitle = await GPT(problemPrompts.problemTitle.prompt,companyOverview);
     const problemStatement = await GPT(problemPrompts.problemStatement.prompt,companyOverview)
-    const problemGPT = await GPT(problemPrompts.problemGPT.prompt,problemPrompts.problemGPT.Refine,companyOverview)
+    const problemGPT = await NestedGPT(problemPrompts.problemGPT.prompt,problemPrompts.problemGPT.Refine,companyOverview)
     const problemPoints = cleanAndSplit(problemGPT);
 
     const problemHeaderPromises = problemPoints.map(async (point) => {

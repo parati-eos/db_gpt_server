@@ -6,6 +6,7 @@ const problemController = require('./controllers/problemController');
 const solutionController = require('./controllers/solutionController');
 const productScreenShotController = require('./controllers/productScreenShotController')
 const productController = require('./controllers/productController');
+const businessModelController = require('./controllers/businessModelController')
 const Response = require('./models/ResponseModel');
 
 // MongoDB connection string
@@ -61,18 +62,19 @@ app.post('/fetch-and-process', async (req, res) => {
     const db = mongoose.connection.db;
     const collection = db.collection('Prompts');
     const prompts = await collection.findOne({});
-    console.log(prompts);
+
 
     if (!prompts) {
       return res.status(404).send({ error: 'Prompts not found' });
     }
-
+  
     const gptResponse = new Response({
       about: await aboutController(submission,prompts.aboutPrompts),
       problemDescription: await problemController(submission,prompts.problemPrompts),
       solutionDescription: await solutionController(submission,prompts.solutionPrompts),
       product: await productController(submission,prompts.productPrompts),
       productScreen: await productScreenShotController(submission,prompts.productScreenShotPrompts),
+      businessModel: await businessModelController(submission,prompts.businessModel)
 
     });
 

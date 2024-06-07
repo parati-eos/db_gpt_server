@@ -68,18 +68,43 @@ app.post('/fetch-and-process', async (req, res) => {
       return res.status(404).send({ error: 'Prompts not found' });
     }
   
-    const gptResponse = new Response({
-      about: await aboutController(submission,prompts.aboutPrompts),
-      problemDescription: await problemController(submission,prompts.problemPrompts),
-      solutionDescription: await solutionController(submission,prompts.solutionPrompts),
-      product: await productController(submission,prompts.productPrompts),
-      productScreen: await productScreenShotController(submission,prompts.productScreenShotPrompts),
-      businessModel: await businessModelController(submission,prompts.businessModel)
+    const { aboutPrompts, problemPrompts, solutionPrompts, productPrompts, productScreenShotPrompts, businessModel } = prompts;
 
-    });
+    try {
+      const [
+        about,
+        problemDescription,
+        solutionDescription,
+        product,
+        productScreen
+      ] = await Promise.all([
+        aboutController(submission, aboutPrompts),
+        problemController(submission, problemPrompts),
+        solutionController(submission, solutionPrompts),
+        productController(submission, productPrompts),
+        productScreenShotController(submission, productScreenShotPrompts),
+      ]);
+    
+      const businessModelResult = await businessModelController(submission, businessModel);
+    
+      const gptResponse = new Response({
+        about,
+        problemDescription,
+        solutionDescription,
+        product,
+        productScreen,
+        businessModel: businessModelResult
+      });
+      await gptResponse.save();
+      res.send(gptResponse);
+    } catch (error) {
+      console.error('Error creating GPT response:', error);
+      // Handle the error accordingly
+    }
+    
 
-    await gptResponse.save();
-    res.send(gptResponse);
+    
+    
   } catch (error) {
     console.error('Error while processing the request:', error.message);
     res.status(500).send({ error: 'An error occurred while processing the request' });

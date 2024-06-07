@@ -6,6 +6,7 @@ const problemController = require('./controllers/problemController');
 const solutionController = require('./controllers/solutionController');
 const productScreenShotController = require('./controllers/productScreenShotController')
 const productController = require('./controllers/productController');
+const businessModelController = require('./controllers/businessModelController')
 const Response = require('./models/ResponseModel');
 
 // MongoDB connection string
@@ -61,23 +62,49 @@ app.post('/fetch-and-process', async (req, res) => {
     const db = mongoose.connection.db;
     const collection = db.collection('Prompts');
     const prompts = await collection.findOne({});
-    console.log(prompts);
+
 
     if (!prompts) {
       return res.status(404).send({ error: 'Prompts not found' });
     }
+  
+    const { aboutPrompts, problemPrompts, solutionPrompts, productPrompts, productScreenShotPrompts, businessModel } = prompts;
 
-    const gptResponse = new Response({
-      about: await aboutController(submission,prompts.aboutPrompts),
-      problemDescription: await problemController(submission,prompts.problemPrompts),
-      solutionDescription: await solutionController(submission,prompts.solutionPrompts),
-      product: await productController(submission,prompts.productPrompts),
-      productScreen: await productScreenShotController(submission,prompts.productScreenShotPrompts),
+    try {
+      const [
+        about,
+        problemDescription,
+        solutionDescription,
+        product,
+        productScreen
+      ] = await Promise.all([
+        aboutController(submission, aboutPrompts),
+        problemController(submission, problemPrompts),
+        solutionController(submission, solutionPrompts),
+        productController(submission, productPrompts),
+        productScreenShotController(submission, productScreenShotPrompts),
+      ]);
+    
+      const businessModelResult = await businessModelController(submission, businessModel);
+    
+      const gptResponse = new Response({
+        about,
+        problemDescription,
+        solutionDescription,
+        product,
+        productScreen,
+        businessModel: businessModelResult
+      });
+      await gptResponse.save();
+      res.send(gptResponse);
+    } catch (error) {
+      console.error('Error creating GPT response:', error);
+      // Handle the error accordingly
+    }
+    
 
-    });
-
-    await gptResponse.save();
-    res.send(gptResponse);
+    
+    
   } catch (error) {
     console.error('Error while processing the request:', error.message);
     res.status(500).send({ error: 'An error occurred while processing the request' });

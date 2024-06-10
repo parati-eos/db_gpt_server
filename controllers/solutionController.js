@@ -1,24 +1,28 @@
 const { GPT, NestedGPT } = require('../gpt');
 const cleanAndSplit = require('../utils/cleanandsplit');
-const separateHeaderDescription = require('../utils/sepreateHeaderDescription')
+const separateHeaderDescription = require('../utils/sepreateHeaderDescription');
 
-async function solutionController(submission,solutionPrompts){
-    const{ companyDetails,solutionDescription} = submission;
+async function solutionController(submission, solutionPrompts) {
+    const { companyDetails } = submission;
     const { companyOverview } = companyDetails;
 
-    const solutionTitle = await GPT(solutionPrompts.solutionTitle.prompt,companyOverview);
-    const solutionStatement = await GPT(solutionPrompts.solutionStatement.prompt,companyOverview)
-    const solutionGPT = await NestedGPT(solutionPrompts.solutionGPT.prompt,solutionPrompts.solutionGPT.Refine,companyOverview)
-    
+    const solutionTitle = await GPT(solutionPrompts.solutionTitle.prompt, companyOverview);
+    const solutionStatement = await GPT(solutionPrompts.solutionStatement.prompt, companyOverview);
+    const solutionGPT = await NestedGPT(
+        solutionPrompts.solutionGPT.prompt,
+        solutionPrompts.solutionGPT.Refine,
+        companyOverview
+    );
+
     const solutionPoints = cleanAndSplit(solutionGPT);
 
-    const solutionHeaderPromises = solutionPoints.map(async (point) => {
-        const { header, description } = separateHeaderDescription(point);
-        if (header === "") {
-            return await GPT(solutionPrompts.solutionPointHeader.prompt, description);
-        }
-        return header;
-    });
+    const solutionHeaderDescriptions = await Promise.all(
+        solutionPoints.map(async (point) => {
+            const { header, description } = separateHeaderDescription(point);
+            const finalHeader = header || await GPT(solutionPrompts.solutionPointHeader.prompt, description);
+            return { header: finalHeader, description };
+        })
+    );
 
     const [
         solutionHeader1,
@@ -27,15 +31,15 @@ async function solutionController(submission,solutionPrompts){
         solutionHeader4,
         solutionHeader5,
         solutionHeader6
-    ] = await Promise.all([
-        ...solutionHeaderPromises
-    ]);
+    ] = await Promise.all(
+        solutionHeaderDescriptions.map(item => item.header)
+    );
 
     const solutionResponse = {
         iterativeSolution: "test",
-        solutionTitle: solutionTitle,
-        solutionStatement: solutionStatement,
-        solutionGPT: solutionGPT,
+        solutionTitle,
+        solutionStatement,
+        solutionGPT,
         solutionGPTCleaned: "test",
         solutionGPT1: "test",
         solutionGPT2: "test",
@@ -49,21 +53,21 @@ async function solutionController(submission,solutionPrompts){
         solutionHeader4: solutionHeader4,
         solutionHeader5: solutionHeader5,
         solutionHeader6: solutionHeader6,
-        solutionDescription1: solutionPoints[0],
-        solutionDescription2: solutionPoints[1],
-        solutionDescription3: solutionPoints[2],
-        solutionDescription4: solutionPoints[3],
-        solutionDescription5: solutionPoints[4],
-        solutionDescription6: solutionPoints[5],
+        solutionDescription1: solutionHeaderDescriptions[0]?.description || "test",
+        solutionDescription2: solutionHeaderDescriptions[1]?.description || "test",
+        solutionDescription3: solutionHeaderDescriptions[2]?.description || "test",
+        solutionDescription4: solutionHeaderDescriptions[3]?.description || "test",
+        solutionDescription5: solutionHeaderDescriptions[4]?.description || "test",
+        solutionDescription6: solutionHeaderDescriptions[5]?.description || "test",
         solutionIcon1: "test",
         solutionIcon2: "test",
         solutionIcon3: "test",
         solutionIcon4: "test",
         solutionIcon5: "test",
         solutionIcon6: "test"
-    }
-    return solutionResponse;
+    };
 
+    return solutionResponse;
 }
 
-module.exports = solutionController
+module.exports = solutionController;

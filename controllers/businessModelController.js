@@ -1,25 +1,28 @@
 const { GPT, NestedGPT } = require('../gpt');
 const cleanAndSplit = require('../utils/cleanandsplit');
-const separateHeaderDescription = require('../utils/sepreateHeaderDescription')
+const separateHeaderDescription = require('../utils/sepreateHeaderDescription');
 
-async function businessModelController(submission,businessModelPrompts){
-
-    const {product,companyDetails,businessModel} = submission
-    const {productOverview} = product;
+async function businessModelController(submission, businessModelPrompts) {
+    const { product, companyDetails, businessModel } = submission;
+    const { productOverview } = product;
     const { companyOverview } = companyDetails;
-    console.log(businessModelPrompts)
-    const revenueModel = await GPT(businessModelPrompts.revenueModel.prompt,productOverview)
-    
-    const revenueStreamGPT = await NestedGPT(businessModelPrompts.revenueStreamGPT.prompt,businessModelPrompts.revenueStreamGPT.Refine,`${productOverview} ${businessModel.businessModel}`)
+
+    const revenueModel = await GPT(businessModelPrompts.revenueModel.prompt, productOverview);
+
+    const revenueStreamGPT = await NestedGPT(
+        businessModelPrompts.revenueStreamGPT.prompt,
+        businessModelPrompts.revenueStreamGPT.Refine,
+        `${productOverview} ${businessModel.businessModel}`
+    );
     const revenueStreamPoints = cleanAndSplit(revenueStreamGPT);
-    
-    const revenueStreamHeaderPromises = revenueStreamPoints.map(async (point) => {
-        const { header, description } = separateHeaderDescription(point);
-        if (header === "") {
-            return await GPT(businessModelPrompts.revenueStreamPointHeader.prompt, description);
-        }
-        return header;
-    });
+
+    const revenueStreamHeaderDescriptions = await Promise.all(
+        revenueStreamPoints.map(async (point) => {
+            const { header, description } = separateHeaderDescription(point);
+            const finalHeader = header || await GPT(businessModelPrompts.revenueStreamPointHeader.prompt, description);
+            return { header: finalHeader, description };
+        })
+    );
 
     const [
         revenueStreamHeader1,
@@ -28,16 +31,14 @@ async function businessModelController(submission,businessModelPrompts){
         revenueStreamHeader4,
         revenueStreamHeader5,
         revenueStreamHeader6
-    ] = await Promise.all([
-        ...revenueStreamHeaderPromises
-    ]);
+    ] = await Promise.all(
+        revenueStreamHeaderDescriptions.map(item => item.header)
+    );
 
-
-
-    const businessModelResponse= {
-        revenueModel: revenueModel,
+    const businessModelResponse = {
+        revenueModel,
         revenueModelImage: "test",
-        revenueStreamGPT: revenueStreamGPT,
+        revenueStreamGPT,
         revenueStreamGPTCleaned: "test",
         revenueStreamGPT1: "test",
         revenueStreamGPT2: "test",
@@ -47,17 +48,17 @@ async function businessModelController(submission,businessModelPrompts){
         stream2: revenueStreamHeader2,
         stream3: revenueStreamHeader3,
         stream4: revenueStreamHeader4,
-        streamDescription1: revenueStreamPoints[0],
-        streamDescription2: revenueStreamPoints[1],
-        streamDescription3: revenueStreamPoints[2],
-        streamDescription4: revenueStreamPoints[3],
+        streamDescription1: revenueStreamHeaderDescriptions[0]?.description || "test",
+        streamDescription2: revenueStreamHeaderDescriptions[1]?.description || "test",
+        streamDescription3: revenueStreamHeaderDescriptions[2]?.description || "test",
+        streamDescription4: revenueStreamHeaderDescriptions[3]?.description || "test",
         streamIcon1: "test",
         streamIcon2: "test",
         streamIcon3: "test",
         streamIcon4: "test"
-    }
+    };
 
     return businessModelResponse;
 }
 
-module.exports = businessModelController
+module.exports = businessModelController;

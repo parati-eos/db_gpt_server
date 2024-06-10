@@ -6,7 +6,8 @@ const problemController = require('./controllers/problemController');
 const solutionController = require('./controllers/solutionController');
 const productScreenShotController = require('./controllers/productScreenShotController')
 const productController = require('./controllers/productController');
-const businessModelController = require('./controllers/businessModelController')
+const businessModelController = require('./controllers/businessModelController');
+const gtmController = require('./controllers/gtmController');
 const Response = require('./models/ResponseModel');
 
 // MongoDB connection string
@@ -68,7 +69,7 @@ app.post('/fetch-and-process', async (req, res) => {
       return res.status(404).send({ error: 'Prompts not found' });
     }
   
-    const { aboutPrompts, problemPrompts, solutionPrompts, productPrompts, productScreenShotPrompts, businessModel } = prompts;
+    const { aboutPrompts, problemPrompts, solutionPrompts, productPrompts, productScreenShotPrompts, businessModel,gtmPrompts } = prompts;
 
     try {
       const [
@@ -93,13 +94,13 @@ app.post('/fetch-and-process', async (req, res) => {
         solutionDescription,
         product,
         productScreen,
-        businessModel: businessModelResult
+        businessModel: businessModelResult,
+        goToMarket: await gtmController(submission,gtmPrompts)
       });
       await gptResponse.save();
       res.send(gptResponse);
     } catch (error) {
       console.error('Error creating GPT response:', error);
-      // Handle the error accordingly
     }
     
 

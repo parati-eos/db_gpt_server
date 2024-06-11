@@ -7,6 +7,8 @@ async function gtmController(submission, gtmPrompts) {
     const { product, companyDetails } = submission;
     const { productOverview } = product;
     const { companyOverview } = companyDetails;
+    const {goToMarket} = submission;
+    const {keyStakeholders} = goToMarket;
 
     // Generate initial stakeholder points
     const stakeholderGPT = await NestedGPT(gtmPrompts.stakeholderGPT.prompt, gtmPrompts.stakeholderGPT.Refine, `${companyOverview} ${productOverview}`);
@@ -42,7 +44,31 @@ async function gtmController(submission, gtmPrompts) {
         personaHeaderDescriptions.map(item => item.header)
     );
 
-    // Prepare gtmResponse with headers and descriptions mapped to benefits
+    const  gtmOverview  = await NestedGPT(gtmPrompts.gtmOverview.prompt,gtmPrompts.gtmOverview.Refine,`${companyOverview} ${productOverview} ${stakeholderGPT}`)
+    const gtmTitle  = await GPT(gtmPrompts.gtmTitle.prompt,gtmOverview)
+    const gtmGPT = await NestedGPT(gtmPrompts.gtmGPT.prompt,gtmPrompts.gtmGPT.Refine,`${companyOverview} ${productOverview} ${stakeholderGPT}`)
+    const gtmPoints = cleanAndSplit(gtmGPT);
+
+
+    const gtmHeaderDescriptions = await Promise.all(
+        gtmPoints.map(async (point) => {
+            const { header, description } = separateHeaderDescription(point);
+            const finalHeader = header || await GPT(gtmPrompts.gtmPointHeader.prompt, description);
+            return { header: finalHeader, description };
+        })
+    );
+
+    const [
+        gtmHeader1,
+        gtmHeader2,
+        gtmHeader3,
+        gtmHeader4,
+        gtmHeader5
+    ] = await Promise.all(
+        gtmHeaderDescriptions.map(item => item.header)
+    );
+
+
     const gtmResponse = {
         stakeholdersTitle: "test",
         stakeholderGPT,
@@ -79,26 +105,26 @@ async function gtmController(submission, gtmPrompts) {
         personaIcon1: "test",
         personaIcon2: "test",
         personaIcon3: "test",
-        gtmTitle: "test",
-        gtmOverview: "test",
+        gtmTitle: gtmTitle,
+        gtmOverview: gtmOverview,
         gtmCoverImageLandscape: "test",
-        gtmGPT: "test",
+        gtmGPT: gtmGPT,
         gtmGPTCleaned: "test",
         gtmGPT1: "test",
         gtmGPT2: "test",
         gtmGPT3: "test",
         gtmGPT4: "test",
         gtmGPT5: "test",
-        gtmHeader1: "test",
-        gtmHeader2: "test",
-        gtmHeader3: "test",
-        gtmHeader4: "test",
-        gtmHeader5: "test",
-        gtmDescription1: "test",
-        gtmDescription2: "test",
-        gtmDescription3: "test",
-        gtmDescription4: "test",
-        gtmDescription5: "test",
+        gtmHeader1: gtmHeader1,
+        gtmHeader2: gtmHeader2,
+        gtmHeader3: gtmHeader3,
+        gtmHeader4: gtmHeader4,
+        gtmHeader5: gtmHeader5,
+        gtmDescription1: gtmHeaderDescriptions[0]?.description || "",
+        gtmDescription2: gtmHeaderDescriptions[1]?.description || "",
+        gtmDescription3: gtmHeaderDescriptions[2]?.description || "",
+        gtmDescription4: gtmHeaderDescriptions[3]?.description || "",
+        gtmDescription5: gtmHeaderDescriptions[4]?.description || "",
         gtmIcon1: "test",
         gtmIcon2: "test",
         gtmIcon3: "test",

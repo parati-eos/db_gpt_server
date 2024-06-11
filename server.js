@@ -8,6 +8,8 @@ const productScreenShotController = require('./controllers/productScreenShotCont
 const productController = require('./controllers/productController');
 const businessModelController = require('./controllers/businessModelController');
 const gtmController = require('./controllers/gtmController');
+const competitorsController = require('./controllers/competitorsController')
+const marketController = require('./controllers/marketController')
 const Response = require('./models/ResponseModel');
 
 // MongoDB connection string
@@ -69,7 +71,7 @@ app.post('/fetch-and-process', async (req, res) => {
       return res.status(404).send({ error: 'Prompts not found' });
     }
   
-    const { aboutPrompts, problemPrompts, solutionPrompts, productPrompts, productScreenShotPrompts, businessModel,gtmPrompts } = prompts;
+    const { aboutPrompts, problemPrompts, solutionPrompts, productPrompts, productScreenShotPrompts, businessModel,gtmPrompts,competitorsPrompts, marketPrompts} = prompts;
 
     try {
       const [
@@ -77,17 +79,23 @@ app.post('/fetch-and-process', async (req, res) => {
         problemDescription,
         solutionDescription,
         product,
-        productScreen
+        productScreen,
+        businessModelResult,
+        gtm,
+        competitors
       ] = await Promise.all([
         aboutController(submission, aboutPrompts),
         problemController(submission, problemPrompts),
         solutionController(submission, solutionPrompts),
         productController(submission, productPrompts),
         productScreenShotController(submission, productScreenShotPrompts),
+        businessModelController(submission, businessModel),
+        gtmController(submission,gtmPrompts),
+        competitorsController(submission,competitorsPrompts)
       ]);
     
-      const businessModelResult = await businessModelController(submission, businessModel);
-    
+     const marketControllerResult = await marketController(submission,marketPrompts);
+      
       const gptResponse = new Response({
         about,
         problemDescription,
@@ -95,7 +103,9 @@ app.post('/fetch-and-process', async (req, res) => {
         product,
         productScreen,
         businessModel: businessModelResult,
-        goToMarket: await gtmController(submission,gtmPrompts)
+        goToMarket: gtm,
+        competitors: competitors,
+        market:marketControllerResult
       });
       await gptResponse.save();
       res.send(gptResponse);
